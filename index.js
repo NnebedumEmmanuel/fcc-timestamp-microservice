@@ -1,10 +1,8 @@
 const express = require("express");
+const cors = require("cors");
 const app = express();
 
-// Enable CORS for FCC testing
-const cors = require("cors");
 app.use(cors());
-
 app.use(express.static("public"));
 
 app.get("/", (req, res) => {
@@ -12,33 +10,32 @@ app.get("/", (req, res) => {
 });
 
 app.get("/api/:date?", (req, res) => {
-  let dateParam = req.params.date;
-  let date;
+  let dateInput = req.params.date;
 
-  // Case 1: No date provided — use current date
-  if (!dateParam) {
+  let date;
+  // If no date param, use current date
+  if (!dateInput) {
     date = new Date();
   } else {
-    // Check if it's a UNIX timestamp (only digits)
-    if (!isNaN(dateParam) && /^\d+$/.test(dateParam)) {
-      date = new Date(parseInt(dateParam));
+    // If input is only digits, treat it as UNIX timestamp in milliseconds
+    if (/^\d+$/.test(dateInput)) {
+      date = new Date(parseInt(dateInput));
     } else {
-      date = new Date(dateParam);
+      date = new Date(dateInput);
     }
   }
 
   // Check for invalid date
   if (date.toString() === "Invalid Date") {
-    return res.json({ error: "Invalid Date" });
+    res.json({ error: "Invalid Date" });
+  } else {
+    res.json({
+      unix: date.getTime(),
+      utc: date.toUTCString(),
+    });
   }
-
-  res.json({
-    unix: date.getTime(),
-    utc: date.toUTCString(),
-  });
 });
 
-// Listen on the correct port for FCC
 const listener = app.listen(process.env.PORT || 3000, () => {
   console.log("Your app is listening on port " + listener.address().port);
 });
