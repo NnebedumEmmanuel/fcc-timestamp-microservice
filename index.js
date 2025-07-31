@@ -1,44 +1,50 @@
 const express = require("express");
 const cors = require("cors");
+
 const app = express();
 
+// Enable CORS for FCC testing
 app.use(cors());
-app.use(express.static("public"));
 
+// Root route
 app.get("/", (req, res) => {
-  res.sendFile(__dirname + "/views/index.html");
+  res.sendFile(__dirname + "/index.html");
 });
 
-// ✅ Main route for FCC Timestamp Microservice
+// ✅ Timestamp Microservice Route
 app.get("/api/:date?", (req, res) => {
-  const dateParam = req.params.date;
+  const { date } = req.params;
 
-  let date;
-
-  // If no date parameter is provided, use current date
-  if (!dateParam) {
-    date = new Date();
-  } else {
-    // If the date is a number, treat it as UNIX timestamp
-    if (/^\d+$/.test(dateParam)) {
-      date = new Date(parseInt(dateParam));
-    } else {
-      date = new Date(dateParam);
-    }
+  // Case 1: No date provided, return current time
+  if (!date) {
+    const now = new Date();
+    return res.json({
+      unix: now.getTime(),
+      utc: now.toUTCString(),
+    });
   }
 
-  // Check for invalid date
-  if (date.toString() === "Invalid Date") {
+  // Case 2: If date is only digits (Unix timestamp in milliseconds or seconds)
+  const isUnixTimestamp = /^\d+$/.test(date);
+
+  const parsedDate = isUnixTimestamp
+    ? new Date(parseInt(date)) // parse as int if Unix timestamp
+    : new Date(date); // parse as date string
+
+  // Case 3: Invalid Date
+  if (parsedDate.toString() === "Invalid Date") {
     return res.json({ error: "Invalid Date" });
   }
 
-  // Valid date - return in required format
-  res.json({
-    unix: date.getTime(),
-    utc: date.toUTCString(),
+  // Case 4: Valid date
+  return res.json({
+    unix: parsedDate.getTime(),
+    utc: parsedDate.toUTCString(),
   });
 });
 
-const listener = app.listen(process.env.PORT || 3000, () => {
-  console.log("Your app is listening on port " + listener.address().port);
+// Listen on port assigned by environment or 3000 locally
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+  console.log(`Your app is listening on port ${port}`);
 });
