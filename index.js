@@ -9,31 +9,34 @@ app.get("/", (req, res) => {
   res.sendFile(__dirname + "/views/index.html");
 });
 
+// ✅ Main route for FCC Timestamp Microservice
 app.get("/api/:date?", (req, res) => {
-  let dateInput = req.params.date;
+  const dateParam = req.params.date;
 
   let date;
-  // If no date param, use current date
-  if (!dateInput) {
+
+  // If no date parameter is provided, use current date
+  if (!dateParam) {
     date = new Date();
   } else {
-    // If input is only digits, treat it as UNIX timestamp in milliseconds
-    if (/^\d+$/.test(dateInput)) {
-      date = new Date(parseInt(dateInput));
+    // If the date is a number, treat it as UNIX timestamp
+    if (/^\d+$/.test(dateParam)) {
+      date = new Date(parseInt(dateParam));
     } else {
-      date = new Date(dateInput);
+      date = new Date(dateParam);
     }
   }
 
   // Check for invalid date
   if (date.toString() === "Invalid Date") {
-    res.json({ error: "Invalid Date" });
-  } else {
-    res.json({
-      unix: date.getTime(),
-      utc: date.toUTCString(),
-    });
+    return res.json({ error: "Invalid Date" });
   }
+
+  // Valid date - return in required format
+  res.json({
+    unix: date.getTime(),
+    utc: date.toUTCString(),
+  });
 });
 
 const listener = app.listen(process.env.PORT || 3000, () => {
