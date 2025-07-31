@@ -1,25 +1,26 @@
 const express = require("express");
-const cors = require("cors");
 const app = express();
+const cors = require("cors");
 
-app.use(cors());
+app.use(cors({ optionsSuccessStatus: 200 })); // enable CORS
+app.use(express.static("public"));
 
-// Serve static index.html if you have a frontend; not required for the API
 app.get("/", (req, res) => {
-  res.sendFile(__dirname + "/index.html"); // optional
+  res.sendFile(__dirname + "/views/index.html");
 });
 
 app.get("/api/:date?", (req, res) => {
-  const dateParam = req.params.date;
+  let dateString = req.params.date;
   let date;
 
-  if (!dateParam) {
+  if (!dateString) {
     date = new Date();
-  } else if (/^\d+$/.test(dateParam)) {
-    // All digits—treat as Unix timestamp in milliseconds
-    date = new Date(parseInt(dateParam));
+  } else if (!isNaN(dateString)) {
+    // Handle UNIX timestamp in milliseconds
+    date = new Date(parseInt(dateString));
   } else {
-    date = new Date(dateParam);
+    // Handle ISO date string
+    date = new Date(dateString);
   }
 
   if (date.toString() === "Invalid Date") {
@@ -34,5 +35,5 @@ app.get("/api/:date?", (req, res) => {
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
-  console.log("Listening on port " + port);
+  console.log(`Server running on port ${port}`);
 });
